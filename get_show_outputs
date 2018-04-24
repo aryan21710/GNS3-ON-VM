@@ -1,0 +1,54 @@
+#!/usr/bin/python
+
+
+import telnetlib as tn
+import getpass
+import re
+import os,sys
+import subprocess as subp
+#from scapy.all import *
+from time import sleep
+
+def telnet_to_rtr(skt):
+    print ('\n\n','*'*60)
+    print ('SOCKET CONNECTION TO RTR:-',skt)
+    uname='test1'
+    print ('PLEASE ENTER PASSWD TO LOGIN TO RT :-\n\n')
+    sleep(5)
+    passwd=getpass.getpass()
+    skt.read_until("Username: ")  
+    skt.write(uname+"\n")
+    sleep(1)
+    skt.read_until("Password: ")
+    skt.write(passwd+"\n")
+    sleep(1)
+    skt.read_until("gns3-r1#")
+    skt.write("show running-config\n") 
+    sleep(1)
+    skt.write("exit\n")
+    sleep(1)
+    print ('\n','$'*60)
+    print ('RTR CONSOLE OUTPUT:-',skt.read_very_eager())
+    skt.close()
+    
+
+def connectivity(ip_rtr):
+    res=sr1(IP(dst=ip_rtr)/ICMP(),retry=1,timeout=1)
+    expr=r'(echo-reply)'
+    try:
+       print ('OUTPUT OF SR:-',res.summary())
+       output=re.search(expr,str(res.summary()))
+       print ('PACKETS RECEIVED:-',output.groups())
+       return True
+    except:
+       print ('REGEXP FAILED:-')
+    
+
+ip_rtr='192.168.168.1'
+skt=tn.Telnet(ip_rtr)
+#output=connectivity(ip_rtr)
+output=1
+if output:
+   print ('ROUTER IS REACHABLE.....')
+   telnet_to_rtr(skt)
+

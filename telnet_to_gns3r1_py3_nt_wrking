@@ -1,0 +1,64 @@
+#!/usr/bin/python3
+
+import telnetlib as tn
+import getpass
+import subprocess as subp
+import re
+
+def connectivity(ip_rtr):
+    print('\n','*'*60)
+    print ("The ROuter's IP:=",ip_rtr)
+    o=subp.check_output(['ping',ip_rtr,'-c','5']).decode('utf-8')
+    
+    expr=r'([0-9]+)(% packet loss)'
+    inp=re.search(expr,o)
+    if inp.group(1) == '0':
+       print ('NO PACKET LOSS. CONNECTIVTITY IS SECURE...')
+       return True
+    else:
+       print (inp.groups())
+       print ('PACKET LOSS OF:-',inp.group(1))
+       return False
+     
+
+def tel_to_rtr(ip_rtr,skt_cont):
+    port=5000
+    uname='test1'
+    passwd=getpass.getpass()
+    host=ip_rtr
+   
+    print ('LOGIN SCREEN :-',skt_cont) 
+    a=skt_cont.read_until(b"Username: ")
+    a1=skt_cont.write((uname+"\r\n").encode("ascii"))
+
+    b=skt_cont.read_until(b"Password: ")
+    b1=skt_cont.write((passwd+"\r\n").encode("ascii"))
+
+    print ('a:-',a)
+    print ('a1:-',a1)
+    print ('b:-',b)
+    print ('b1:-',b1)
+
+    c=skt_cont.read_until(b"gns3-r1#")
+    print ('c:-',c)
+    c1=skt_cont.write(b"show line\r\n")
+    print ('c1:-',c1)
+    rtr_output=(skt_cont.read_all().decode("ascii"))
+    print ('ROUTER OUTPUT:-',rtr_output)
+
+    skt_cont.close()
+
+#def check_iprtr_format():
+
+
+#ip_rtr=input('PLEASE ENTER THE IP ADDRESS OF THE RTR:-')
+ip_rtr='192.168.168.1'
+
+output=connectivity(ip_rtr)
+
+if (output):
+   
+   skt_cont=tn.Telnet(ip_rtr)
+   tel_to_rtr(ip_rtr,skt_cont)
+else:
+   print ('SCRIPT FAILED. COZ OF PKT LOSS...')
